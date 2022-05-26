@@ -1,19 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using recipe_service.Models;
 
 namespace recipe_service.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> _logger;
+    private readonly ILoginManager _loginManager;
 
-    public UserController(ILogger<UserController> logger)
+    public UserController(ILogger<UserController> logger, ILoginManager loginManager)
     {
         _logger = logger;
+        _loginManager = loginManager;
     }
 
 
+    [AllowAnonymous]
     [HttpPost("/Users")]
     public IActionResult AddUser()
     {
@@ -24,13 +30,16 @@ public class UserController : ControllerBase
         // return Forbid();      // @ TODO: on password policy violation
     }
 
+    [AllowAnonymous]
     [HttpPost("/Users/Login")]
-    public IActionResult UserLogin()
+    public IActionResult UserLogin([FromBody] UserModel login)
     {
-        // @TODO: do credential check
-        // @TODO: access token 
-        return Ok();
-        // return Forbid();
+        var user = _loginManager.Authenticate(login.UserName, login.PassWord);
+        if(user != null)
+        {
+            return Ok(new { token = _loginManager.GenerateToken(user) });
+        }
+        return Forbid();
     }
 
     [HttpPost("/Users/Logoff")]
@@ -42,7 +51,7 @@ public class UserController : ControllerBase
         // return Forbid();
     }
 
-    [HttpDelete("/Users/Delete")]
+    [HttpDelete("/Users")]
     public IActionResult UserDelete()
     {
         // @TODO: only when user is logged in already
