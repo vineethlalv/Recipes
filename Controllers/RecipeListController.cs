@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace recipe_service.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class RecipeListController : ControllerBase
@@ -14,6 +16,7 @@ public class RecipeListController : ControllerBase
     }
 
 
+    [AllowAnonymous]
     [HttpGet("/Recipies/Lists/{id:int}")]
     [Produces("application/json")]
     public IActionResult GetRecipeList(int id)
