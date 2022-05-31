@@ -4,13 +4,15 @@ using System.IdentityModel.Tokens.Jwt;
 
 namespace recipe_service.Models;
 
-public class LoginManager : ILoginManager
+public class UserManager : IUserManager
 {
     private IConfiguration _configuration;
+    private IDataAccess _dataAccess;
 
-    public LoginManager(IConfiguration configuration)
+    public UserManager(IConfiguration configuration, IDataAccess dataAccess)
     {
         _configuration = configuration;
+        _dataAccess = dataAccess;
     }
 
     public UserModel? Authenticate(string? userName, string? passWord)
@@ -36,5 +38,20 @@ public class LoginManager : ILoginManager
                                          signingCredentials: credentials);
     
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    public UserStatus AddUser(UserModel userDetails)
+    {
+        if(userDetails.UserName is null || userDetails.PassWord is null)
+            return UserStatus.InvalidInputs;
+
+        if(_dataAccess.IsUserExists(userDetails.UserName))
+            return UserStatus.UserNameExists;
+        // @TODO: check password match policy
+        else
+        {
+            _dataAccess.AddUser(userDetails);
+            return UserStatus.Ok;
+        }
     }
 }

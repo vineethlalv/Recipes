@@ -9,7 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddSingleton(typeof(ILoginManager), typeof(LoginManager));
+
+builder.Services.AddScoped(typeof(IDataAccess), typeof(DataAccess));
+builder.Services.AddScoped(typeof(IUserManager), typeof(UserManager));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 .AddJwtBearer(options => {

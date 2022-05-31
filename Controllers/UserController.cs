@@ -10,34 +10,41 @@ namespace recipe_service.Controllers;
 public class UserController : ControllerBase
 {
     private readonly ILogger<UserController> _logger;
-    private readonly ILoginManager _loginManager;
+    private readonly IUserManager _userManager;
 
-    public UserController(ILogger<UserController> logger, ILoginManager loginManager)
+    public UserController(ILogger<UserController> logger, IUserManager userManager)
     {
         _logger = logger;
-        _loginManager = loginManager;
+        _userManager = userManager;
     }
 
 
     [AllowAnonymous]
     [HttpPost("/Users")]
-    public IActionResult AddUser()
+    public IActionResult AddUser([FromBody] UserModel userDetails)
     {
-        // @TODO: validations - unique username, password constraints
-        // @TODO: add user to db
-        return Ok();
-        // return Conflict();    // @TODO: on same username
-        // return Forbid();      // @ TODO: on password policy violation
+        UserStatus status = _userManager.AddUser(userDetails);
+        switch(status)
+        {
+            case UserStatus.InvalidInputs:
+                return NoContent();
+            case UserStatus.UserNameExists:
+                return Conflict("User with same username exists");
+            case UserStatus.PWPolicyViolation:
+                return Forbid("Password doesn't conform to policy");
+            default:
+                return Ok();
+        }
     }
 
     [AllowAnonymous]
     [HttpPost("/Users/Login")]
     public IActionResult UserLogin([FromBody] UserModel login)
     {
-        var user = _loginManager.Authenticate(login.UserName, login.PassWord);
+        var user = _userManager.Authenticate(login.UserName, login.PassWord);
         if(user != null)
         {
-            return Ok(new { token = _loginManager.GenerateToken(user) });
+            return Ok(new { token = _userManager.GenerateToken(user) });
         }
         return Forbid();
     }
@@ -45,8 +52,7 @@ public class UserController : ControllerBase
     [HttpPost("/Users/Logoff")]
     public IActionResult UserLogoff()
     {
-        // @TODO: only when user is logged in
-        // @TODO: logoff user
+        // @TODO: research/figure out methods for JWT server invalidation
         return Ok();
         // return Forbid();
     }
