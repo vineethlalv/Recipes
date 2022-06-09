@@ -1,7 +1,5 @@
-using System.Text;
+
 using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 
 using recipe_service.Application.Constants;
 using recipe_service.Application.Interfaces;
@@ -14,36 +12,35 @@ public class UserManager : IUserManager
 {
     private IConfiguration _configuration;
     private IDataAccess _dataAccess;
+    private TokenManager _tokenMan;
 
     public UserManager(IConfiguration configuration, IDataAccess dataAccess)
     {
         _configuration = configuration;
         _dataAccess = dataAccess;
+        _tokenMan = new TokenManager(_configuration);
     }
 
-    public UserModel? Authenticate(string? userName, string? passWord)
+    /// <summary>
+    /// Authenticate Users and returns JWT token
+    /// </summary>
+    /// <param name="userName"></param>
+    /// <param name="passWord"></param>
+    /// <returns>JWT token when authenticated, null otherwise</returns>
+    public string? Authenticate(string? userName, string? passWord)
     {
         // @TODO: slat password compare against db
         UserModel? user = null;
+        string? token = null;
 
-        // @TEMP code - authenticate any for testing
+        // @TEMP code
         user = new UserModel{ UserName = "user123" };
-
-        return user;
-    }
-
-    public string? GenerateToken(UserModel? user)
-    {
-        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));    
-        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);    
-    
-        var token = new JwtSecurityToken(_configuration["Jwt:Issuer"],    
-                                         _configuration["Jwt:Issuer"],    
-                                         null,    
-                                         expires: DateTime.Now.AddMinutes(120),    
-                                         signingCredentials: credentials);
-    
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        //////////////////////////////////////////////
+        if(user != null)
+        {
+            token = _tokenMan.GenerateToken(user);
+        }
+        return token;
     }
 
     public UserStatus AddUser(UserModel userDetails)

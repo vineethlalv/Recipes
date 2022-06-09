@@ -5,7 +5,6 @@ namespace recipe_service.Application.Interfaces;
 
 public interface IUserManager
 {
-    UserModel? Authenticate(string? userName, string? passWord);
-    string? GenerateToken(UserModel? user);
+    string? Authenticate(string? userName, string? passWord);
     UserStatus AddUser(UserModel userDetails);
 }
